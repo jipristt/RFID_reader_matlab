@@ -1,0 +1,173 @@
+%RFID reader
+%Christos Kyprianou
+
+%Clear shit
+clc
+clear all
+close all
+
+%Begin
+%read file & initialize
+fileID = fopen('signal.txt','r');
+sgnl = fscanf(fileID,'%f');
+sz = size(sgnl);
+t = 1:1:sz;
+th_t = 50; %Threshold time fot Tx '1'
+th_ts = 10; %Thershold time for Rx '1'
+th_small = 300; %For recognizing when is Rfid transmtting time
+th_eom =  100; %Recognizing when transmision stops for Tx
+th_eoms = 20; %Recognise transmission stop for Rx
+th_a = 0.5;   %Amplitude threshold for Tx
+th_as = 0.65; %Amplitude threshold for Rx
+
+Tx = zeros(sz); 
+
+%Get Tx pulses
+tx_msg = []; %Tx decoded message!!
+small = [];
+tflag = 0;
+sflag = 0;
+for i = 1:1:sz
+    if sgnl(i)-th_a > 0
+        Tx(i) = 1;
+        %rising edge
+        if tflag == 0
+            tflag = 1;
+            t1 = i;
+        end
+    else
+        if tflag == 1 
+           %falling edge
+            tflag=0;
+            t_on = i-t1;
+            if t_on >th_t
+                if t_on >th_eom
+                    tx_msg = [tx_msg -1];
+                    if t_on > th_small 
+                        small = [small t1 i];
+                    end
+                else
+                    tx_msg = [tx_msg 1];
+                end
+            else
+                tx_msg = [tx_msg 0];
+            end
+        end
+    end
+end
+
+%print transmtted messages:
+tx_msg
+
+%print stuff
+figure()
+subplot(2,1,1)    
+plot(t,sgnl,'r')
+axis([0 sz(1) 0.1 0.8])
+title('Original Signal');
+grid on
+subplot(2,1,2)
+plot(t,Tx,'b');
+title('Tx digital')
+axis([0 sz(1) -0.1 1.1])
+grid on
+
+
+
+rx_msg = []; %Rx decoded message!!!
+rflag = 0;
+zflag = 0;
+Rx = zeros(size(sgnl));
+ssz = size(small);
+for x = 1:2:ssz(2)
+    t2 = small(x);
+    for i = small(x):1:small(x+1)
+        
+        if sgnl(i)-th_as > 0
+            Rx(i) = 1;
+            %rising edge
+            if rflag == 0
+                rflag = 1;
+                t1 = i;
+                t_on = i-t2
+                if t_on >th_ts
+                    if t_on >th_eoms
+                        rx_msg = [rx_msg -1];
+                     else
+                        rx_msg = [rx_msg 1];
+                    end
+                    zflag = 0;
+                else
+                    zflag=zflag+1;
+                    if zflag == 2
+                        rx_msg = [rx_msg 0];
+                        zflag = 0;
+                    end    
+                end    
+            end
+        else
+            if rflag == 1 
+                %falling edge
+                rflag=0;
+                t2 = i;
+                t_on = i-t1
+                if t_on >th_ts
+                    if t_on >th_eoms
+                        rx_msg = [rx_msg -1];
+                     else
+                        rx_msg = [rx_msg 1];
+                    end
+                    zflag = 0;
+                else
+                    zflag = zflag+1;
+                    if zflag == 2
+                        rx_msg = [rx_msg 0];
+                        zflag = 0;
+                    end
+                end         
+            end
+        end
+    end
+    received = [rx_msg]
+    %rx_msg =[];
+end
+
+
+%now some pulses
+figure()
+plot(t,sgnl)
+
+
+
+%print stuff
+figure()
+subplot(2,1,1)    
+plot(t,sgnl,'r')
+axis([0 sz(1) 0.1 0.8])
+title('Original Signal');
+grid on
+
+subplot(2,1,2)
+plot(t,Rx,'b');
+title('Rx digital')
+axis([0 sz(1) -0.1 1.1])
+grid on
+
+%print stuff
+figure()
+subplot(3,1,1)    
+plot(t,sgnl,'r')
+axis([0 sz(1) 0.1 0.8])
+title('Original Signal');
+grid on
+subplot(3,1,2)
+plot(t,Tx,'b');
+title('Tx digital')
+axis([0 sz(1) -0.1 1.1])
+grid on
+subplot(3,1,3)
+plot(t,Rx,'b');
+title('Rx digital')
+axis([0 sz(1) -0.1 1.1])
+grid on
+
