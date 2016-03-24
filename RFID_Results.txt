@@ -1,0 +1,124 @@
+*************************************
+*     Wireless networking RFID fun time!	*
+*  Christos Kyprianou  |    Bjarki Johannsson	*
+*    4516222               ||        4503104	*
+*************************************
+
+Communication Description:
+
+----------------------------
+The first R->T message is an ACK command of 18 bits. The command is defined by the first 2 bits which are 01. 
+The rest is RN16 of all 1s.
+
+
+
+Then there is an ACK response T->R. 
+
+
+
+The second R->T message is a ReqRN of 40 bits.
+The command is defined by the first 8 bits which are 1100 0001. The following 16 bits are an RN, all 1s.
+Then there is a 16 bit CRC of 0011 1111 1010 1011.
+
+
+
+The second T->R message is a ReqRN reply of 32 bits.
+16 bits RN/handle and 16 bits CRC, all bits are 1s.
+
+Note that a -1 in our T->R bitstream preambles equals "0v".
+
+
+
+Decoded Messages:
+--------------------
+
+R=>T message 1
+------------------
+Random signal untill communicaton starts
+-1
+
+Preamble
+0	-1	
+
+Command code (ACK)
+0	1	
+
+Message (RN16):
+1	1	1	1	1	1	1	1	
+1	1	1	1	1	1	1	1	
+
+End of message
+-1
+
+===========================================================
+T=>R message 1
+------------------
+Random signal between Tx-Rx
+1	1	-1	0	-1	
+
+Preamble
+1	0	1	-1	1	
+*Note: Preabmle in T=>R message should be 1010v1 but since v becomes an extension of 0, 0v is presented as -1
+
+Message
+0	0	1	1	0	1	0	0	
+0	0	0	0	0	0	0	0	
+0	0	0	0	0	0	0	0	
+0	0	1	1	0	1	0	0
+1	0	1	1	0	0	0	0
+0	0	0	0	0	1	1	1	
+0	0	0	1	0	0	0	0	
+1	0	1	0	1	1	0	1	
+1	1	1	0	0	0	1	1	
+0	0	0	0	0	0	0	0	
+0	0	0	0	0	0	0	0	
+0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0
+1	1	1	1	0	0	0	1
+0	1	1	0	0	1	0	1	
+
+End of message
+-1	
+
+==========================================================
+R=>T message 2
+-----------------
+Preamble
+0	-1	
+
+Command code (ReqRN) 
+1	1	0	0	0	0	0	1
+
+Messaege
+RN16:
+1	1	1	1	1	1	1	1	
+1	1	1	1	1	1	1	1	
+
+CRC:
+0	0	1	1	1	1	1	1	
+1	0	1	0	1	0	1	1	
+
+End of message
+-1
+==========================================================
+
+T=>R message 2
+------------------
+Random signal between Tx-Rx
+1	1	-1	0	-1	
+
+Preamble
+1	0	1	-1	1	
+*Note: Preabmle in T=>R message should be 1010v1 but since v becomes an extension of 0, 0v is presented as -1
+
+Message:
+1	1	1	1	1	1	1	1
+1	1	1	1	1	1	1	1
+1	1	1	1	1	1	1	1
+1	1	1	1	1	1	1	1
+
+End of messge	
+-1
+
+
